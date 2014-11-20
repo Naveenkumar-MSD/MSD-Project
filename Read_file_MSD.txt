@@ -1,0 +1,73 @@
+// Address bits=32 bits
+// cache size = 8 MB
+// line size  = 64 byte
+//number of ways= 16
+// byte offset requires 6 bits
+//number of sets= 8k sets
+// number of bits required for indexing=13 bits
+// number of required tag bits=13 bits
+
+
+
+module Read_File();
+  parameter FALSE = 1'b0; // constants to generate clock signal, 
+  parameter CLOCK_CYCLE = 20; // this clock is used only to create a delay between commands read from trace file
+  parameter CLOCK_WIDTH = CLOCK_CYCLE/2;
+  parameter IDLE_CLOCKS = 10;
+  reg CLOCK;
+  //reg [3:0] N [0:10];
+  //reg[31:0] ADDRESS [0:10];
+  reg [3:0] N;
+  reg[31:0] ADDRESS;
+  integer file,count, file_output; // variables used to read the trace file and write the output file
+  reg [3:0] instruction;// variables used to read the trace file
+  reg [31:0] address_aux;// variables used to read the trace file
+  reg [12:0] index_bits;
+  reg[12:0]tag_bits;
+  //integer i;
+
+
+initial 
+
+	begin 
+		CLOCK = FALSE; 
+		forever #CLOCK_WIDTH CLOCK = ~CLOCK; 	
+	end
+
+
+initial 
+	begin 
+	//for (i =0; i<10; i=i+1)
+	//begin
+		file = $fopen("C:\\Naveen Kumar KR\\MSD_Project\\trace_file.txt", "r" );
+    		while (!$feof(file))
+    		begin     
+			$monitor($time,"%h %h",instruction,address_aux);//load the value of the instruction command and address from file
+			address_aux = {32{FALSE}};
+      			instruction = {4{FALSE}};
+      			count = $fscanf(file,"%h %h ",instruction,address_aux);
+      			N= instruction; 
+			ADDRESS= address_aux; //assigning command and address
+    			//delay for the module to respond
+    			repeat(IDLE_CLOCKS) @(posedge CLOCK); // add delay
+			$display ("%h     %h",  N,  ADDRESS);
+			index_bits=ADDRESS[18:6];			
+			tag_bits=ADDRESS[31:19];
+		end
+	//end
+    $fclose(file);//finish reading file
+	
+	end
+initial
+	begin
+		repeat(IDLE_CLOCKS) @(posedge CLOCK); 
+		file_output = $fopen("C:\\Naveen Kumar KR\\MSD_Project\\Results.txt","w");
+	 	$fwrite(file_output,"Hit at %h \ n", ADDRESS);
+		$fclose(file_output);
+	end
+
+// initial
+//	begin
+//		$fclose(file_output);
+//	end  
+endmodule  
